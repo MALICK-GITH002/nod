@@ -1,20 +1,21 @@
 from telegram import Update
 from telegram.ext import Application, CommandHandler, CallbackContext
 
+# Fonction pour gérer la commande /start
 async def start(update: Update, context: CallbackContext) -> None:
     await update.message.reply_text(
-        "Bonjour ! Utilisez la commande /scan pour scanner un réseau.\n"
-        "Exemple : /scan 192.168.1 1 10 80"
+        "Bonjour ! Le bot est opérationnel. Utilisez les commandes disponibles."
     )
 
+# Fonction principale pour démarrer le bot
 def main():
-    # Remplacez 'YOUR_TOKEN_HERE' par votre token Telegram
+    # Remplacez 'YOUR_TOKEN_HERE' par le token de votre bot Telegram
     application = Application.builder().token("8036490999:AAFlp8YuCAhjAd6wQumtUtdSs9HUMWKahFo").build()
 
-    # Ajouter le gestionnaire pour /start
+    # Ajouter un gestionnaire pour la commande /start
     application.add_handler(CommandHandler("start", start))
 
-    # Démarrer le bot
+    # Lancer le bot en mode polling
     application.run_polling()
 
 if __name__ == "__main__":
