@@ -9,7 +9,7 @@ async def start(update: Update, context: CallbackContext) -> None:
 
 def main():
     # Remplacez 'YOUR_TOKEN_HERE' par votre token Telegram
-    application = Application.builder().token("YOUR_TOKEN_HERE").build()
+    application = Application.builder().token("8036490999:AAFlp8YuCAhjAd6wQumtUtdSs9HUMWKahFo").build()
 
     # Ajouter le gestionnaire pour /start
     application.add_handler(CommandHandler("start", start))
