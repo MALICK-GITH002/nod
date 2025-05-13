@@ -1,6 +1,39 @@
+import subprocess
 import requests
 from telegram import Update
 from telegram.ext import Application, CommandHandler, CallbackContext
+
+# Fonction pour exécuter Nmap localement
+async def nmap_local_scan(update: Update, context: CallbackContext) -> None:
+    # Vérifiez si l'utilisateur a fourni une cible
+    if len(context.args) < 1:
+        await update.message.reply_text(
+            "❌ Fournissez une cible valide pour effectuer un scan réseau.\n"
+            "Exemple : /nmap 192.168.1.1"
+        )
+        return
+
+    # Récupérer la cible depuis les arguments
+    target = context.args[0]
+
+    # Options supplémentaires pour Nmap (facultatif)
+    extra_args = context.args[1:]  # Permet à l'utilisateur de fournir des options supplémentaires
+
+    try:
+        # Construire la commande Nmap
+        command = ["nmap", target] + extra_args
+
+        # Exécuter la commande Nmap
+        result = subprocess.check_output(command, text=True, stderr=subprocess.STDOUT)
+
+        # Retourner les résultats au format texte à l'utilisateur
+        await update.message.reply_text(f"🔍 Résultats du scan Nmap pour {target} :\n\n{result[:4000]}")  # Limite à 4000 caractères
+    except subprocess.CalledProcessError as e:
+        await update.message.reply_text(
+            f"❌ Une erreur s'est produite lors de l'exécution de Nmap :\n{e.output[:4000]}"
+        )
+    except Exception as e:
+        await update.message.reply_text(f"❌ Une erreur inattendue s'est produite : {e}")
 
 # Fonction générique pour appeler l'API HackerTarget
 async def call_hackertarget_api(update: Update, context: CallbackContext, api_url: str, description: str) -> None:
@@ -18,10 +51,7 @@ async def call_hackertarget_api(update: Update, context: CallbackContext, api_ur
     except Exception as e:
         await update.message.reply_text(f"❌ Une erreur s'est produite : {e}")
 
-# Commandes spécifiques à chaque fonctionnalité
-async def nmap_scan(update: Update, context: CallbackContext) -> None:
-    await call_hackertarget_api(update, context, "https://api.hackertarget.com/nmap/?q={target}", "nmap")
-
+# Commandes spécifiques basées sur l'API HackerTarget
 async def dns_lookup(update: Update, context: CallbackContext) -> None:
     await call_hackertarget_api(update, context, "https://api.hackertarget.com/dnslookup/?q={target}", "dnslookup")
 
@@ -58,12 +88,14 @@ async def ping_check(update: Update, context: CallbackContext) -> None:
 # Commande de démarrage
 async def start(update: Update, context: CallbackContext) -> None:
     await update.message.reply_text(
-        "👋 Bienvenue dans le bot HackerTarget ! Voici les commandes disponibles :\n\n"
-        "/nmap <cible> - Scan réseau avec Nmap\n"
+        "👋 Bienvenue dans le bot réseau ! Voici les commandes disponibles :\n\n"
+        "🔗 **Commandes Nmap locales (sans dépendance API)** :\n"
+        "/nmap <cible> [options] - Scan réseau avec Nmap local\n\n"
+        "🌐 **Commandes dépendant de l'API HackerTarget** :\n"
         "/dnslookup <cible> - Recherche DNS\n"
         "/whois <cible> - Recherche Whois\n"
         "/geoip <cible> - Informations géographiques d'IP\n"
-        "/portscan <cible> - Scan de ports\n"
+        "/portscan <cible> - Scan de ports (via API)\n"
         "/subdomains <cible> - Sous-domaines associés\n"
         "/traceroute <cible> - Trace de route\n"
         "/blacklist <cible> - Vérification de liste noire\n"
@@ -80,7 +112,7 @@ def main():
 
     # Ajouter les gestionnaires de commandes
     application.add_handler(CommandHandler("start", start))
-    application.add_handler(CommandHandler("nmap", nmap_scan))
+    application.add_handler(CommandHandler("nmap", nmap_local_scan))
     application.add_handler(CommandHandler("dnslookup", dns_lookup))
     application.add_handler(CommandHandler("whois", whois_lookup))
     application.add_handler(CommandHandler("geoip", geoip_lookup))
